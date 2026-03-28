@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
                     </div>
                     
                     {/* Decorative Icon */}
-                    <img src="/logo.png" alt="Enddy's Logo" className="absolute -bottom-10 -right-10 w-64 h-64 object-contain opacity-50 rotate-12 group-hover:rotate-0 transition-transform duration-700 ease-out" />
+                    <img src="/logo.jpeg" alt="Enddy's Logo" className="absolute -bottom-10 -right-10 w-64 h-64 object-contain opacity-50 rotate-12 group-hover:rotate-0 transition-transform duration-700 ease-out mix-blend-multiply" />
                     <div className="absolute top-10 right-10 w-20 h-20 bg-brand-500 rounded-full blur-2xl opacity-50"></div>
 
                     <div className="relative z-10">

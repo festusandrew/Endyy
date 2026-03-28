@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ cartCount, onOpenCart }) => {
         {/* Logo - Matches the circular badge style in reference 1 roughly */}
         <Link to="/" className="flex items-center gap-2 group">
           <div className={`p-1 rounded-full border-2 border-brand-200 transform group-hover:rotate-12 transition-transform ${scrolled ? 'bg-white' : 'bg-brand-50'}`}>
-            <img src="/logo.png" alt="Enddy's Logo" className="w-10 h-10 object-contain rounded-full" />
+            <img src="/logo.jpeg" alt="Enddy's Logo" className="w-10 h-10 object-contain rounded-full shadow-sm border border-brand-100" />
           </div>
           {(!isHome || scrolled) && (
              <span className="text-xl font-display font-bold text-brand-800 tracking-wide">Enddy</span>
@@ -81,7 +81,13 @@ export const Header: React.FC<HeaderProps> = ({ cartCount, onOpenCart }) => {
             onClick={handleUserClick}
             className={`p-3 rounded-full hover:bg-brand-100 transition-colors group ${scrolled || !isHome ? 'bg-white text-brand-800 shadow-sm border border-brand-100' : 'bg-brand-800 text-white shadow-lg'}`}
           >
-            <User size={20} />
+            {user ? (
+              <span className="w-5 h-5 flex items-center justify-center font-bold text-sm">
+                {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+              </span>
+            ) : (
+              <User size={20} />
+            )}
           </button>
           <button 
             onClick={onOpenCart}
@@ -89,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ cartCount, onOpenCart }) => {
           >
             <ShoppingBag size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-accent-pink text-brand-900 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+              <span className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-accent-pink text-brand-900 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
                 {cartCount}
               </span>
             )}

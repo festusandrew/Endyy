@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Package, MapPin, CreditCard, User, Heart, RefreshCcw, LogOut } from 'lucide-react';
-import { apiGetMyOrders, Order } from '../services/orderAPI';
+import { apiGetMyOrders, apiCancelOrder, Order } from '../services/orderAPI';
 import { apiUpdateMe } from '../services/authAPI';
 
 export const Dashboard: React.FC = () => {
@@ -16,6 +16,11 @@ export const Dashboard: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+
+  // Address form state
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [newAddress, setNewAddress] = useState({ label: 'Home', street: '', city: '', state: '', zip: '' });
+  const [addressMsg, setAddressMsg] = useState('');
 
   useEffect(() => {
     if (!loading && !user) navigate('/');
@@ -63,6 +68,31 @@ export const Dashboard: React.FC = () => {
       setSaveMsg(err.message || 'Failed to save profile');
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleCancelOrder = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      await apiCancelOrder(id);
+      setOrders(orders.map(o => o._id === id ? { ...o, status: 'cancelled' } : o));
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel order');
+    }
+  };
+
+  const handleAddAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddressMsg('');
+    try {
+      const currentAddresses = user.addresses || [];
+      await apiUpdateMe({ addresses: [...currentAddresses, newAddress] });
+      await refreshUser();
+      setAddressMsg('Address added successfully!');
+      setShowAddressForm(false);
+      setNewAddress({ label: 'Home', street: '', city: '', state: '', zip: '' });
+    } catch (err: any) {
+      setAddressMsg(err.message || 'Failed to add address');
     }
   };
 
@@ -144,9 +174,20 @@ export const Dashboard: React.FC = () => {
                               {new Date(order.createdAt).toLocaleDateString()}
                             </p>
                           </div>
-                          <span className="px-3 py-1 bg-brand-50 text-brand-800 text-xs font-bold rounded-full uppercase">
-                            {order.status}
-                          </span>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${
+                              order.status === 'cancelled' ? 'bg-red-50 text-red-600' :
+                              order.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
+                              'bg-brand-50 text-brand-800'
+                            }`}>
+                              {order.status}
+                            </span>
+                            {order.status === 'pending' && (
+                              <button onClick={() => handleCancelOrder(order._id)} className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline">
+                                Cancel Order
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="space-y-2 mb-4">
                           {order.items.map((item, idx) => (
@@ -172,8 +213,39 @@ export const Dashboard: React.FC = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-brand-950">Manage Addresses</h2>
-                  <button className="text-sm font-bold text-brand-600 hover:text-brand-800">Add New</button>
+                  <button onClick={() => setShowAddressForm(!showAddressForm)} className="text-sm font-bold text-brand-600 hover:text-brand-800">
+                    {showAddressForm ? 'Cancel' : 'Add New'}
+                  </button>
                 </div>
+                {addressMsg && <p className={`text-sm mb-4 ${addressMsg.includes('success') ? 'text-green-600' : 'text-red-500'}`}>{addressMsg}</p>}
+                
+                {showAddressForm && (
+                  <form onSubmit={handleAddAddress} className="mb-6 bg-brand-50 p-6 rounded-xl border border-brand-100 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-xs font-medium text-brand-900 mb-1">Label (e.g. Home)</label>
+                        <input required value={newAddress.label} onChange={e => setNewAddress({...newAddress, label: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Home" />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-xs font-medium text-brand-900 mb-1">City</label>
+                        <input required value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Keffi" />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-xs font-medium text-brand-900 mb-1">Street Address</label>
+                        <input required value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="123 Bakery Lane" />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-xs font-medium text-brand-900 mb-1">State / Zip</label>
+                        <div className="flex gap-2">
+                          <input value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nasarawa" />
+                          <input value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} className="w-1/3 px-3 py-2 border rounded-lg text-sm" placeholder="10001" />
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" className="bg-brand-900 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-brand-800 transition-colors">Save Address</button>
+                  </form>
+                )}
+
                 {user.addresses?.length ? (
                   <div className="space-y-4">
                     {user.addresses.map((addr: any, i: number) => (

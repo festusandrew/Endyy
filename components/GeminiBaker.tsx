@@ -5,9 +5,12 @@ import { getBakerResponse } from '../services/geminiService';
 
 export const GeminiBaker: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: "Hi! I'm Baker Ben. Need help choosing a cake or have questions about ingredients?" }
-  ]);
+  const defaultMessage: ChatMessage = { role: 'model', text: "Hi! I'm Baker Ben. Need help choosing a cake or have questions about ingredients?" };
+  
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const saved = localStorage.getItem('enddy_baker_chat');
+    return saved ? JSON.parse(saved) : [defaultMessage];
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -17,6 +20,7 @@ export const GeminiBaker: React.FC = () => {
   };
 
   useEffect(() => {
+    localStorage.setItem('enddy_baker_chat', JSON.stringify(messages));
     scrollToBottom();
   }, [messages, isOpen]);
 
@@ -28,7 +32,7 @@ export const GeminiBaker: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    const replyText = await getBakerResponse(input);
+    const replyText = await getBakerResponse(input, messages);
     
     setMessages(prev => [...prev, { role: 'model', text: replyText }]);
     setIsLoading(false);
@@ -51,9 +55,14 @@ export const GeminiBaker: React.FC = () => {
                 <p className="text-xs text-brand-200">AI Assistant</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded transition-colors">
-              <X size={18} />
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => { setMessages([defaultMessage]); localStorage.removeItem('enddy_baker_chat'); }} className="hover:bg-white/20 px-2 py-1 rounded text-xs transition-colors" title="Clear Chat">
+                Clear
+              </button>
+              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded transition-colors">
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}

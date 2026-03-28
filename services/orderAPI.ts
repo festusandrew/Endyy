@@ -78,3 +78,14 @@ export const apiGetOrderById = async (
   const { data } = await api.get<{ order: Order }>(`/api/orders/${id}`);
   return data;
 };
+
+/**
+ * Cancel a pending order
+ */
+export const apiCancelOrder = async (
+  id: string
+): Promise<{ order: Order }> => {
+  const { data } = await api.put<{ order: Order }>(`/api/orders/${id}/cancel`);
+  return data;
+};
+

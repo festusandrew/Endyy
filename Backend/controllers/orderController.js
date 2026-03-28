@@ -70,4 +70,24 @@ const getOrderById = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getOrderById };
+// ─── @route  PUT /api/orders/:id/cancel ─────────────────────────────────────
+// @desc   Cancel a pending order
+// @access Private
+const cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findOne({ _id: id, userId: req.user._id });
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.status !== 'pending') return res.status(400).json({ message: 'Only pending orders can be cancelled' });
+
+    order.status = 'cancelled';
+    await order.save();
+    
+    res.status(200).json({ order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getOrderById, cancelOrder };

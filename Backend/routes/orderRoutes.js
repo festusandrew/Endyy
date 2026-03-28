@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createOrder, getMyOrders, getOrderById } = require('../controllers/orderController');
+const { createOrder, getMyOrders, getOrderById, cancelOrder } = require('../controllers/orderController');
 const { protect } = require('../middleware/protect');
 
 // Public — guest checkout is allowed; protect is optional
@@ -29,5 +29,6 @@ router.post('/', (req, res, next) => {
 // Private — must be logged in
 router.get('/my',  protect, getMyOrders);
 router.get('/:id', protect, getOrderById);
+router.put('/:id/cancel', protect, cancelOrder);
 
 module.exports = router;
