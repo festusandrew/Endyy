@@ -1,0 +1,178 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information including addresses and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "The user's profile picture URL."
+        },
+        "addresses": {
+          "type": "array",
+          "description": "List of saved addresses.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "street": { "type": "string" },
+              "city": { "type": "string" },
+              "state": { "type": "string" },
+              "zip": { "type": "string" },
+              "isDefault": { "type": "boolean" }
+            },
+            "required": ["id", "street", "city", "state"]
+          }
+        },
+        "wishlist": {
+          "type": "array",
+          "description": "List of product IDs saved to the wishlist.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the profile was created."
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "An order placed by a user or a guest.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The order ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who placed the order. Null if guest."
+        },
+        "customerEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Email of the customer."
+        },
+        "items": {
+          "type": "array",
+          "description": "Items in the order.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" }
+            },
+            "required": ["productId", "name", "price", "quantity"]
+          }
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Order subtotal."
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Delivery fee applied."
+        },
+        "total": {
+          "type": "number",
+          "description": "Total amount paid."
+        },
+        "deliveryMethod": {
+          "type": "string",
+          "enum": ["Delivery", "Pickup"],
+          "description": "The selected delivery method."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "processing", "shipped", "ready_for_pickup", "delivered", "cancelled", "returned"],
+          "description": "Current status of the order."
+        },
+        "shippingAddress": {
+          "type": "object",
+          "description": "Shipping address if delivery.",
+          "properties": {
+            "street": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zip": { "type": "string" }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the order was placed."
+        }
+      },
+      "required": ["id", "customerEmail", "items", "subtotal", "total", "deliveryMethod", "status", "createdAt"]
+    },
+    "ReturnRequest": {
+      "title": "ReturnRequest",
+      "description": "A return or refund request for an order.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The return request ID."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "The associated order ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user requesting the return."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for the return."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "completed"],
+          "description": "Status of the return request."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the request was created."
+        }
+      },
+      "required": ["id", "orderId", "userId", "reason", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profiles."
+    },
+    "orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Stores all orders."
+    },
+    "returns/{returnId}": {
+      "schema": { "$ref": "#/entities/ReturnRequest" },
+      "description": "Stores return requests."
+    }
+  }
+}

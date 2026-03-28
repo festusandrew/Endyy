@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required, immutable) - The user's unique ID.
+    //   - email: string (required, immutable) - The user's email address.
+    //   - displayName: string (optional) - The user's full name.
+    //   - photoURL: string (optional) - The user's profile picture URL.
+    //   - addresses: list (optional) - List of saved addresses.
+    //   - wishlist: list (optional) - List of product IDs saved to the wishlist.
+    //   - createdAt: timestamp (required, immutable) - When the profile was created.
+    //
+    // Collection: orders
+    // Document ID: {orderId}
+    // Fields:
+    //   - id: string (required, immutable) - The order ID.
+    //   - userId: string (optional, immutable) - The ID of the user who placed the order. Null if guest.
+    //   - customerEmail: string (required, immutable) - Email of the customer.
+    //   - items: list (required, immutable) - Items in the order.
+    //   - subtotal: number (required, immutable) - Order subtotal.
+    //   - deliveryFee: number (required, immutable) - Delivery fee applied.
+    //   - total: number (required, immutable) - Total amount paid.
+    //   - deliveryMethod: string (required, immutable) - The selected delivery method.
+    //   - status: string (required) - Current status of the order.
+    //   - shippingAddress: map (optional, immutable) - Shipping address if delivery.
+    //   - createdAt: timestamp (required, immutable) - When the order was placed.
+    //
+    // Collection: returns
+    // Document ID: {returnId}
+    // Fields:
+    //   - id: string (required, immutable) - The return request ID.
+    //   - orderId: string (required, immutable) - The associated order ID.
+    //   - userId: string (required, immutable) - The ID of the user requesting the return.
+    //   - reason: string (required, immutable) - Reason for the return.
+    //   - status: string (required) - Status of the return request.
+    //   - createdAt: timestamp (required, immutable) - When the request was created.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidList(list, maxSize) {
+      return list is list && list.size() <= maxSize;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             isValidEmail(data.email) &&
+             data.createdAt is timestamp &&
+             isValidOptionalString('displayName', 0, 100) &&
+             isValidOptionalString('photoURL', 0, 500) &&
+             (!( 'addresses' in data ) || isValidList(data.addresses, 20)) &&
+             (!( 'wishlist' in data ) || isValidList(data.wishlist, 100));
+    }
+
+    function isValidOrder(data) {
+      return hasRequiredFields(['id', 'customerEmail', 'items', 'subtotal', 'total', 'deliveryMethod', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             isValidEmail(data.customerEmail) &&
+             data.items is list && data.items.size() > 0 && data.items.size() <= 100 &&
+             data.subtotal is number && data.subtotal >= 0 &&
+             data.total is number && data.total >= 0 &&
+             data.deliveryMethod in ['Delivery', 'Pickup'] &&
+             data.status in ['pending', 'processing', 'shipped', 'ready_for_pickup', 'delivered', 'cancelled', 'returned'] &&
+             data.createdAt is timestamp &&
+             (!( 'userId' in data ) || (data.userId is string && data.userId.size() < 100)) &&
+             (!( 'deliveryFee' in data ) || (data.deliveryFee is number && data.deliveryFee >= 0)) &&
+             (!( 'shippingAddress' in data ) || data.shippingAddress is map);
+    }
+
+    function isValidReturn(data) {
+      return hasRequiredFields(['id', 'orderId', 'userId', 'reason', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             data.orderId is string && data.orderId.size() > 0 && data.orderId.size() < 100 &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.reason is string && data.reason.size() > 0 && data.reason.size() < 1000 &&
+             data.status in ['pending', 'approved', 'rejected', 'completed'] &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() && areImmutableFieldsUnchanged(['uid', 'email', 'createdAt']);
+      allow delete: if false; // Users cannot delete their own profile directly for safety
+    }
+
+    match /orders/{orderId} {
+      // Users can read their own orders. Guests can't read orders once placed (unless we use a token, but for now just users).
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Anyone can create an order (guest checkout), but if userId is provided, it must match the authenticated user.
+      allow create: if isValidOrder(request.resource.data) && 
+                    (
+                      (!('userId' in request.resource.data)) || 
+                      (isAuthenticated() && request.resource.data.userId == request.auth.uid)
+                    );
+      
+      // Only users can cancel their own pending orders.
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && 
+                    isValidOrder(request.resource.data) &&
+                    areImmutableFieldsUnchanged(['id', 'userId', 'customerEmail', 'items', 'subtotal', 'deliveryFee', 'total', 'deliveryMethod', 'shippingAddress', 'createdAt']) &&
+                    request.resource.data.status == 'cancelled' && resource.data.status == 'pending';
+      
+      allow delete: if false;
+    }
+
+    match /returns/{returnId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidReturn(request.resource.data);
+      allow update: if false; // Users cannot update returns once submitted
+      allow delete: if false;
+    }
+  }
+}
