@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PRODUCTS } from '../constants';
 import { ProductCard } from '../components/ProductCard';
-import { Product, ProductCategory, DeliveryMethod } from '../types';
+import { Product, DeliveryMethod } from '../types';
+import { useData } from '../context/DataContext';
 
 interface ShopProps {
   onAddToCart: (product: Product) => void;
@@ -11,6 +12,7 @@ interface ShopProps {
 }
 
 export const Shop: React.FC<ShopProps> = ({ onAddToCart, deliveryMethod, setDeliveryMethod }) => {
+  const { products, categories: contextCategories } = useData();
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const location = useLocation();
 
@@ -18,14 +20,14 @@ export const Shop: React.FC<ShopProps> = ({ onAddToCart, deliveryMethod, setDeli
     const searchParams = new URLSearchParams(location.search);
     const cat = searchParams.get('cat');
     if (cat) {
-      const found = Object.values(ProductCategory).find(c => c.includes(cat)) || 'All';
+      const found = contextCategories.find(c => c.includes(cat)) || 'All';
       setActiveCategory(found as string);
     }
-  }, [location]);
+  }, [location, contextCategories]);
 
-  const categories = ['All', ...Object.values(ProductCategory)];
+  const categories = ['All', ...contextCategories];
 
-  const filteredProducts = PRODUCTS.filter(p => {
+  const filteredProducts = products.filter(p => {
     const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
     const matchesDelivery = !p.availableMethods || p.availableMethods.includes(deliveryMethod);
     return matchesCategory && matchesDelivery;

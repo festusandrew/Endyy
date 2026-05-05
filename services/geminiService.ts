@@ -1,43 +1,33 @@
 import { GoogleGenAI } from "@google/genai";
-import { PRODUCTS } from '../constants';
-import { ChatMessage } from '../types';
 
-// @ts-ignore - Bypass Vite env typing syntax error
-const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
+const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
-export const getBakerResponse = async (userMessage: string, history: ChatMessage[] = []): Promise<string> => {
+export const getBakerResponse = async (userMessage: string): Promise<string> => {
   if (!apiKey) {
     return "I'm sorry, my baking brain isn't connected right now (Missing API Key). But I recommend the Cherry Choco Bliss!";
   }
 
   try {
-    const productCatalog = PRODUCTS.map(p => `- ${p.name} (${p.category}): ₦${p.price.toLocaleString()}`).join('\n      ');
-
-    const formattedHistory = history.map(msg => ({
-      role: msg.role === 'model' ? 'model' : 'user',
-      parts: [{ text: msg.text }]
-    }));
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        ...formattedHistory,
-        { role: 'user', parts: [{ text: userMessage }] }
-      ],
-      config: {
-        systemInstruction: `You are 'Baker Ben', the friendly AI assistant for Enddy's, a premium online cake and dessert shop.
+    const model = ai.models.getGenerativeModel({
+      model: "gemini-3-flash-preview",
+      systemInstruction: `You are 'Baker Ben', the friendly AI assistant for Enddy's, a premium online cake and dessert shop.
       
       Brand Tone: Warm, artisanal, delicious, trustworthy, premium.
       Brand Colors: Cream, Warm Brown, Soft Pink.
       
-      Your goal is to help customers choose desserts based on their needs (birthdays, allergies, taste preferences), and give them accurate pricing information.
+      Your goal is to help customers choose desserts based on their needs (birthdays, allergies, taste preferences).
       
-      Here is our current live menu and prices in Naira (₦):
-      ${productCatalog}
+      We sell:
+      - Cakes (Blueberry Bliss, Royal Chocolate, Ocean Velvet)
+      - Cupcakes (Vanilla Bean, Cherry Choco Bliss, Pink Velvet Kiss)
+      - Yogurt Parfaits (Morning Berry, Mango Tango)
       
-      Keep responses short (under 50 words), helpful, and always try to sound appetizing. If asked about prices, always use the ₦ symbol.`
-      }
+      Keep responses short (under 50 words), helpful, and always try to sound appetizing. If asked about ingredients, emphasize freshness.`
+    });
+
+    const response = await model.generateContent({
+      contents: userMessage,
     });
 
     return response.text || "I'm busy taking a cake out of the oven! Please ask again in a moment.";

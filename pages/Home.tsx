@@ -1,17 +1,18 @@
 import React from 'react';
 import { ArrowRight, Star, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PRODUCTS, TESTIMONIALS } from '../constants';
 import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
+import { useData } from '../context/DataContext';
 
 interface HomeProps {
   onAddToCart: (product: Product) => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
-  const heroProduct = PRODUCTS[0]; 
-  const masterpieces = PRODUCTS.slice(0, 4);
+  const { products, testimonials } = useData();
+  const heroProduct = products[0]; 
+  const masterpieces = products.slice(0, 4);
 
   return (
     <div className="bg-brand-50 min-h-screen">
@@ -131,24 +132,19 @@ export const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
       {/* Reviews - Editorial Layout */}
       <section className="py-24 bg-brand-50 border-t border-brand-200">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-                <div className="flex justify-center gap-2 mb-6 text-brand-900">
-                    <Star size={24} fill="currentColor" />
-                    <Star size={24} fill="currentColor" />
-                    <Star size={24} fill="currentColor" />
-                    <Star size={24} fill="currentColor" />
-                    <Star size={24} fill="currentColor" />
+            <h2 className="text-3xl font-bold text-center text-brand-950 mb-12">What Our Customers Say</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((t: any) => (
+                <div key={t.id} className="bg-white p-8 rounded-3xl shadow-sm border border-brand-100 flex flex-col items-center text-center">
+                  <div className="flex justify-center gap-1 mb-4 text-brand-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={20} fill={i < t.rating ? "currentColor" : "none"} className={i < t.rating ? "" : "text-gray-300"} />
+                      ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-6">"{t.text}"</p>
+                  <p className="font-bold text-brand-950 mt-auto">{t.name}</p>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-bold text-brand-950 leading-tight mb-12">
-                    "Enddy's isn't just a bakery, it's a lifestyle. The attention to detail in every box is unmatched in the city."
-                </h2>
-                <div className="flex items-center justify-center gap-4">
-                    <div className="w-12 h-12 bg-brand-200 rounded-full flex items-center justify-center font-bold text-brand-900">S</div>
-                    <div className="text-left">
-                        <p className="font-bold text-brand-950">Sarah Jenkins</p>
-                        <p className="text-sm text-brand-500 uppercase tracking-widest">Verified Buyer</p>
-                    </div>
-                </div>
+              ))}
             </div>
           </div>
       </section>

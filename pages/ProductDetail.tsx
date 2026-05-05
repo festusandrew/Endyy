@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { PRODUCTS } from '../constants';
 import { Product, DeliveryMethod } from '../types';
 import { Minus, Plus, ShoppingBag, ArrowLeft, Check } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 interface ProductDetailProps {
   onAddToCart: (product: Product, quantity: number) => void;
@@ -10,16 +10,28 @@ interface ProductDetailProps {
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ onAddToCart }) => {
   const { id } = useParams<{ id: string }>();
-  const product = PRODUCTS.find(p => p.id === id);
+  const { products } = useData();
+  const product = products.find(p => p.id === id);
   const [qty, setQty] = React.useState(1);
   
+  const [currentImage, setCurrentImage] = React.useState(product?.image);
+
+  // Update current image when product changes
+  React.useEffect(() => {
+    if (product) {
+      setCurrentImage(product.image);
+    }
+  }, [product]);
+
   if (!product) {
     return <div className="p-20 text-center mt-20">Product not found. <Link to="/shop" className="text-brand-600">Go back</Link></div>;
   }
 
-  const relatedProducts = PRODUCTS
+  const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 3);
+
+  const allImages = [product.image, ...(product.images || [])];
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-20 mt-16">
@@ -29,12 +41,27 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ onAddToCart }) => 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24 mb-24">
         {/* Image - Editorial Style */}
-        <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden rounded-lg">
-          <img 
-            src={product.image} 
-            alt={product.name} 
-            className="w-full h-full object-cover"
-          />
+        <div className="flex flex-col gap-4">
+          <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden rounded-lg">
+            <img 
+              src={currentImage} 
+              alt={product.name} 
+              className="w-full h-full object-cover transition-opacity duration-300"
+            />
+          </div>
+          {allImages.length > 1 && (
+            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+              {allImages.map((img, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentImage(img)}
+                  className={`relative flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${currentImage === img ? 'border-brand-600' : 'border-transparent'}`}
+                >
+                  <img src={img} alt={`${product.name} ${i}`} className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Info */}

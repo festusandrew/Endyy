@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
                     </div>
                     
                     {/* Decorative Icon */}
-                    <img src="/logo.jpeg" alt="Enddy's Logo" className="absolute -bottom-10 -right-10 w-64 h-64 object-contain opacity-50 rotate-12 group-hover:rotate-0 transition-transform duration-700 ease-out mix-blend-multiply" />
+                    <img src="/logo.svg" alt="Enddy's Logo" className="absolute -bottom-10 -right-10 w-64 h-64 object-contain opacity-50 rotate-12 group-hover:rotate-0 transition-transform duration-700 ease-out" />
                     <div className="absolute top-10 right-10 w-20 h-20 bg-brand-500 rounded-full blur-2xl opacity-50"></div>
 
                     <div className="relative z-10">
@@ -60,7 +60,6 @@ export const Footer: React.FC = () => {
                             <span className="text-xs font-bold text-brand-400 uppercase tracking-widest">Discover</span>
                             <Link to="/shop" className="text-brand-950 font-bold hover:text-brand-600 transition-colors text-lg">Menu</Link>
                             <Link to="/shop?cat=Cakes" className="text-brand-950 font-bold hover:text-brand-600 transition-colors text-lg">Cakes</Link>
-                            <Link to="/training" className="text-brand-950 font-bold hover:text-brand-600 transition-colors text-lg">Training</Link>
                          </div>
                          <div className="flex flex-col gap-3">
                              <span className="text-xs font-bold text-brand-400 uppercase tracking-widest">Company</span>
@@ -75,7 +74,11 @@ export const Footer: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end text-xs text-brand-400 uppercase tracking-widest font-bold border-t border-brand-200 pt-6">
-                        <span>© {new Date().getFullYear()} Enddy Cakes & Bakes.</span>
+                        <div className="flex items-center gap-4">
+                           <span>© {new Date().getFullYear()} Enddy Cakes & Bakes.</span>
+                           <Link to="/admin" className="hover:text-brand-600 transition-colors">Admin</Link>
+                           <Link to="/super-admin" className="hover:text-brand-600 transition-colors">Super Admin</Link>
+                        </div>
                         <span className="mt-2 md:mt-0">Baked with Love.</span>
                     </div>
                 </div>

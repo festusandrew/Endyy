@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <style>
+      .bg { fill: #1a3c4b; }
+      .text-main { fill: #ffffff; font-family: 'Brush Script MT', cursive, sans-serif; font-size: 110px; font-weight: bold; }
+      .text-sub { fill: #48c4d3; font-family: 'Arial', sans-serif; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
+      .frosting-pink { fill: #ff85b3; stroke: #ffffff; stroke-width: 4; stroke-linejoin: round; }
+      .frosting-blue { fill: #00c4cc; stroke: #ffffff; stroke-width: 4; stroke-linejoin: round; }
+      .wrapper { fill: #d4a373; stroke: #ffffff; stroke-width: 4; stroke-linejoin: round; }
+      .wrapper-line { stroke: #8b5a2b; stroke-width: 3; stroke-linecap: round; }
+      .outline { stroke: #1a3c4b; stroke-width: 8; stroke-linejoin: round; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="200" cy="220" r="140" class="bg" />
+  <circle cx="200" cy="220" r="130" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5" />
+
+  <!-- Cupcake Group -->
+  <g transform="translate(200, 130) scale(1.2)">
+    <!-- Wrapper -->
+    <path d="M -35,20 L -25,60 L 25,60 L 35,20 Z" class="wrapper" />
+    <line x1="-15" y1="25" x2="-10" y2="55" class="wrapper-line" />
+    <line x1="0" y1="25" x2="0" y2="55" class="wrapper-line" />
+    <line x1="15" y1="25" x2="10" y2="55" class="wrapper-line" />
+
+    <!-- Frosting Layers -->
+    <!-- Bottom Blue -->
+    <path d="M -45,20 C -45,5 -20,10 0,10 C 20,10 45,5 45,20 C 45,35 -45,35 -45,20 Z" class="frosting-blue" />
+    <!-- Middle Pink -->
+    <path d="M -35,5 C -35,-10 -10,-5 0,-5 C 10,-5 35,-10 35,5 C 35,20 -35,20 -35,5 Z" class="frosting-pink" />
+    <!-- Top Blue -->
+    <path d="M -20,-10 C -20,-25 0,-20 0,-20 C 0,-20 20,-25 20,-10 C 20,5 -20,5 -20,-10 Z" class="frosting-blue" />
+    <!-- Peak Pink -->
+    <path d="M -10,-20 C -10,-40 0,-45 0,-45 C 0,-45 10,-40 10,-20 C 10,-5 -10,-5 -10,-20 Z" class="frosting-pink" />
+  </g>
+
+  <!-- Text -->
+  <text x="200" y="250" class="text-main" text-anchor="middle" transform="rotate(-5, 200, 250)">Enddy</text>
+  <text x="200" y="290" class="text-sub" text-anchor="middle">CAKES &amp; BAKES</text>
+</svg>
